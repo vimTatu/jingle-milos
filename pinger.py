@@ -5,8 +5,8 @@ import threading
 from settings import src_address
 
 #Load file with IPv6 address range to ping.
-with open('ipv6.txt', 'r') as range:
-    ips = range.readlines()
+with open('ipv6.txt', 'r') as ranges:
+    ips = ranges.readlines()
 
 class Pinger(threading.Thread):
     """
@@ -53,17 +53,18 @@ def ping(threadName, q):
         queueLock.acquire()
         if not workQueue.empty():
             PING_TARGET = q.get()
-            queueLock.release()
-            data = '\x80\0\0\0\0\0\0\0'
-            sock = socket.socket(socket.AF_INET6, socket.SOCK_RAW, socket.getprotobyname('ipv6-icmp'))
-            sock.bind((src_address, 0))
-            sock.sendto(data, (PING_TARGET, 0, 0, 0))
-            sock.close()
+            if PING_TARGET:
+                queueLock.release()
+                data = b'\x80\0\0\0\0\0\0\0'
+                sock = socket.socket(socket.AF_INET6, socket.SOCK_RAW, socket.getprotobyname('ipv6-icmp'))
+                sock.bind((src_address, 0))
+                sock.sendto(data, (PING_TARGET, 0, 0, 0))
+                sock.close()
 
 
 # Creates pool of names for thread. Range defines count of threads.
 thread_list = []
-for i in range(1,10):
+for i in range(1, 10):
     thread_list.append(i)
 
 queueLock = threading.Lock()
